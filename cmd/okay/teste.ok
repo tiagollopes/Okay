@@ -1,0 +1,4 @@
+print("Okay - A");
+print("Okay - B", nome);
+print("Okay - C");
+
