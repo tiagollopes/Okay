@@ -11,6 +11,7 @@ const (
 	// Keywords
 	SERVICE TokenType = "SERVICE"
 	PORT    TokenType = "PORT"
+	LET     TokenType = "LET"
 
 	// Identifiers & literals
 	IDENT  TokenType = "IDENT"
@@ -18,6 +19,7 @@ const (
 	STRING TokenType = "STRING"
 
 	// Symbols
+	ASSIGN    TokenType = "="
 	LBRACE    TokenType = "{"
 	RBRACE    TokenType = "}"
 	LPAREN    TokenType = "("

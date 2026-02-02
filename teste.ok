@@ -1,0 +1,5 @@
+service usuarios port 8080 {
+    let versao = "1.0.5";
+    let status = "Online";
+    print("Servico:", status, "- Versao:", versao);
+}

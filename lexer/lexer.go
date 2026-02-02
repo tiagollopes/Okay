@@ -24,6 +24,9 @@ func (l *Lexer) NextToken() Token {
 
 	// Symbols
 	switch ch {
+	case '=':
+		l.pos++
+		return Token{Type: ASSIGN, Literal: "="}
 	case '{':
 		l.pos++
 		return Token{Type: LBRACE, Literal: "{"}
@@ -55,13 +58,15 @@ func (l *Lexer) NextToken() Token {
 		lit := string(l.input[start:l.pos])
 
 		switch lit {
-		case "service":
-			return Token{Type: SERVICE, Literal: lit}
-		case "port":
-			return Token{Type: PORT, Literal: lit}
-		default:
-			return Token{Type: IDENT, Literal: lit}
-		}
+			case "service":
+				return Token{Type: SERVICE, Literal: lit}
+			case "port":
+				return Token{Type: PORT, Literal: lit}
+			case "let": // <--- NOVO
+				return Token{Type: LET, Literal: lit}
+			default:
+				return Token{Type: IDENT, Literal: lit}
+			}
 	}
 
 	// Number

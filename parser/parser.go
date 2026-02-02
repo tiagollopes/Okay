@@ -22,7 +22,7 @@ func (p *Parser) nextToken() {
 }
 
 //
-// ===== AST =====
+// ===== AST (Árvore de Sintaxe Abstrata) =====
 //
 
 type Statement interface {
@@ -33,14 +33,35 @@ type Program struct {
 	Statements []Statement
 }
 
+// Novo: Diferencia se o argumento do print é Texto, Número ou Variável
+type PrintArgument struct {
+	Type  string // "STRING", "IDENT" ou "NUMBER"
+	Value string
+}
+
 type PrintStatement struct {
-	Args []string
+	Args []PrintArgument
 }
 
 func (ps *PrintStatement) statementNode() {}
 
+type ServiceStatement struct {
+	Name string
+	Port string
+	Body []Statement
+}
+
+func (ss *ServiceStatement) statementNode() {}
+
+type VarDeclarationStatement struct {
+	Name  string
+	Value string
+}
+
+func (vds *VarDeclarationStatement) statementNode() {}
+
 //
-// ===== PARSER =====
+// ===== PARSER (Lógica de leitura) =====
 //
 
 func (p *Parser) ParseProgram() *Program {
@@ -57,8 +78,15 @@ func (p *Parser) ParseProgram() *Program {
 }
 
 func (p *Parser) ParseStatement() Statement {
-	if p.curTok.Type == lexer.IDENT && p.curTok.Literal == "print" {
-		return p.parsePrint()
+	switch p.curTok.Type {
+	case lexer.SERVICE:
+		return p.parseService()
+	case lexer.IDENT:
+		if p.curTok.Literal == "print" {
+			return p.parsePrint()
+		}
+	case lexer.LET:
+		return p.parseVarDeclaration()
 	}
 
 	fmt.Println("unknown statement:", p.curTok.Literal)
@@ -66,9 +94,47 @@ func (p *Parser) ParseStatement() Statement {
 	return nil
 }
 
-func (p *Parser) parsePrint() Statement {
-	// consume 'print'
+func (p *Parser) parseService() Statement {
+	stmt := &ServiceStatement{}
 	p.nextToken()
+
+	if p.curTok.Type == lexer.IDENT {
+		stmt.Name = p.curTok.Literal
+		p.nextToken()
+	}
+
+	if p.curTok.Type == lexer.PORT {
+		p.nextToken()
+	}
+
+	if p.curTok.Type == lexer.NUMBER {
+		stmt.Port = p.curTok.Literal
+		p.nextToken()
+	}
+
+	if p.curTok.Type == lexer.LBRACE {
+		p.nextToken()
+	} else {
+		fmt.Println("Erro: esperado '{'")
+		return nil
+	}
+
+	for p.curTok.Type != lexer.RBRACE && p.curTok.Type != lexer.EOF {
+		innerStmt := p.ParseStatement()
+		if innerStmt != nil {
+			stmt.Body = append(stmt.Body, innerStmt)
+		}
+	}
+
+	if p.curTok.Type == lexer.RBRACE {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+func (p *Parser) parsePrint() Statement {
+	p.nextToken() // pula 'print'
 
 	if p.curTok.Type != lexer.LPAREN {
 		fmt.Println("expected '(' after print")
@@ -76,11 +142,15 @@ func (p *Parser) parsePrint() Statement {
 	}
 	p.nextToken()
 
-	args := []string{}
+	args := []PrintArgument{}
 
-	for p.curTok.Type != lexer.RPAREN {
-		if p.curTok.Type == lexer.STRING || p.curTok.Type == lexer.IDENT {
-			args = append(args, p.curTok.Literal)
+	for p.curTok.Type != lexer.RPAREN && p.curTok.Type != lexer.EOF {
+		if p.curTok.Type == lexer.STRING || p.curTok.Type == lexer.IDENT || p.curTok.Type == lexer.NUMBER {
+			// Aqui salvamos o Tipo e o Valor separadamente
+			args = append(args, PrintArgument{
+				Type:  string(p.curTok.Type),
+				Value: p.curTok.Literal,
+			})
 			p.nextToken()
 		}
 
@@ -89,8 +159,7 @@ func (p *Parser) parsePrint() Statement {
 		}
 	}
 
-	// consume ')'
-	p.nextToken()
+	p.nextToken() // pula ')'
 
 	if p.curTok.Type != lexer.SEMICOLON {
 		fmt.Println("expected ';' after print")
@@ -99,4 +168,35 @@ func (p *Parser) parsePrint() Statement {
 	p.nextToken()
 
 	return &PrintStatement{Args: args}
+}
+
+func (p *Parser) parseVarDeclaration() Statement {
+	stmt := &VarDeclarationStatement{}
+	p.nextToken()
+
+	if p.curTok.Type != lexer.IDENT {
+		fmt.Println("Erro: esperado nome da variável")
+		return nil
+	}
+	stmt.Name = p.curTok.Literal
+	p.nextToken()
+
+	if p.curTok.Type != lexer.ASSIGN {
+		fmt.Println("Erro: esperado '='")
+		return nil
+	}
+	p.nextToken()
+
+	if p.curTok.Type == lexer.STRING || p.curTok.Type == lexer.NUMBER || p.curTok.Type == lexer.IDENT {
+		stmt.Value = p.curTok.Literal
+		p.nextToken()
+	}
+
+	if p.curTok.Type != lexer.SEMICOLON {
+		fmt.Println("Erro: esperado ';'")
+		return nil
+	}
+	p.nextToken()
+
+	return stmt
 }
