@@ -2,10 +2,10 @@ package eval
 
 import (
 	"fmt"
+	"net/http"
 	"github.com/tiagollopes/okay/parser"
 )
 
-// Environment guarda a memória das variáveis
 type Environment struct {
 	vars map[string]string
 }
@@ -14,7 +14,6 @@ func NewEnvironment() *Environment {
 	return &Environment{vars: make(map[string]string)}
 }
 
-// Eval executa o programa
 func Eval(node interface{}, env *Environment) {
 	switch n := node.(type) {
 
@@ -24,30 +23,49 @@ func Eval(node interface{}, env *Environment) {
 		}
 
 	case *parser.ServiceStatement:
-		fmt.Printf("==> Iniciando Serviço: %s na porta %s\n", n.Name, n.Port)
+		fmt.Printf("==> [OKAY] Servidor '%s' ouvindo na porta %s...\n", n.Name, n.Port)
+
+		// 1. Primeiro, executamos o que está dentro do serviço para carregar as variáveis
 		for _, stmt := range n.Body {
 			Eval(stmt, env)
 		}
 
+		// 2. Configuramos a resposta do servidor
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			// Vamos tentar buscar uma variável chamada 'mensagem' na memória da Okay
+			msg, ok := env.vars["mensagem"]
+			if !ok {
+				msg = "Serviço Online (Sem variável 'mensagem' definida)"
+			}
+
+			fmt.Fprintf(w, "--- Okay Language Backend ---\n")
+			fmt.Fprintf(w, "Servico: %s\n", n.Name)
+			fmt.Fprintf(w, "Resposta: %s\n", msg)
+		})
+
+		// 3. Iniciamos o servidor
+		err := http.ListenAndServe(":"+n.Port, nil)
+		if err != nil {
+			fmt.Printf("Erro crítico: %s\n", err)
+		}
+
 	case *parser.VarDeclarationStatement:
-		// Guarda o valor na memória (mapa)
 		env.vars[n.Name] = n.Value
 
 	case *parser.PrintStatement:
+		fmt.Print("[LOG]: ")
 		for _, arg := range n.Args {
 			if arg.Type == "IDENT" {
-				// Se for variável, busca na memória
 				val, ok := env.vars[arg.Value]
 				if ok {
 					fmt.Print(val, " ")
 				} else {
-					fmt.Printf("<erro: %s indefinida> ", arg.Value)
+					fmt.Printf("<%s?> ", arg.Value)
 				}
 			} else {
-				// Se for texto puro ou número, imprime direto
 				fmt.Print(arg.Value, " ")
 			}
 		}
-		fmt.Println() // Quebra de linha no fim do print
+		fmt.Println()
 	}
 }
