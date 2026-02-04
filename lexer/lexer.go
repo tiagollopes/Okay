@@ -24,6 +24,9 @@ func (l *Lexer) NextToken() Token {
 
 	// Symbols
 	switch ch {
+	case '+':
+		l.pos++
+		return Token{Type: PLUS, Literal: "+"}
 	case '=':
 		l.pos++
 		return Token{Type: ASSIGN, Literal: "="}

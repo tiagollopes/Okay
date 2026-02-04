@@ -3,6 +3,7 @@ package eval
 import (
 	"fmt"
 	"net/http"
+	"strconv" // <--- converte strings em números
 	"github.com/tiagollopes/okay/parser"
 )
 
@@ -50,8 +51,39 @@ func Eval(node interface{}, env *Environment) {
 		}
 
 	case *parser.VarDeclarationStatement:
-		env.vars[n.Name] = n.Value
+		// Verificamos o que tem dentro do valor
+		switch val := n.Value.(type) {
 
+		case string:
+			// Se for texto puro, salva direto
+			env.vars[n.Name] = val
+
+		case *parser.Expression:
+			// 1. Resolver o lado ESQUERDO
+			leftVal := val.Left
+			// Se for um nome de variável, buscamos o valor dela
+			if v, ok := env.vars[val.Left]; ok {
+				leftVal = v
+			}
+
+			// 2. Resolver o lado DIREITO
+			rightVal := val.Right
+			// Se for um nome de variável, buscamos o valor dela
+			if v, ok := env.vars[val.Right]; ok {
+				rightVal = v
+			}
+
+			// 3. Agora sim convertemos e somamos
+			leftNum, _ := strconv.Atoi(leftVal)
+			rightNum, _ := strconv.Atoi(rightVal)
+
+			var resultado int
+			if val.Operator == "+" {
+				resultado = leftNum + rightNum
+			}
+
+			env.vars[n.Name] = strconv.Itoa(resultado)
+		}
 	case *parser.PrintStatement:
 		fmt.Print("[LOG]: ")
 		for _, arg := range n.Args {

@@ -19,6 +19,7 @@ const (
 	STRING TokenType = "STRING"
 
 	// Symbols
+	PLUS      TokenType = "+"
 	ASSIGN    TokenType = "="
 	LBRACE    TokenType = "{"
 	RBRACE    TokenType = "}"

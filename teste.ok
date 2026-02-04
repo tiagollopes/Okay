@@ -1,4 +1,9 @@
-service backend port 8081 {
-    let mensagem = "Ola, este e um dado vindo da variavel da linguagem Okay!";
-    print("Servidor configurado e pronto para receber visitas.");
+service calculadora port 8081 {
+    let preco = 100;
+    let taxa = 15;
+    let total = preco + taxa;
+
+    print("O preco e:", preco);
+    print("A taxa e:", taxa);
+    print("O TOTAL calculado e:", total);
 }

@@ -5,6 +5,12 @@ import (
 
 	"github.com/tiagollopes/okay/lexer"
 )
+// Representa uma operação, ex: 10 + 5
+type Expression struct {
+	Left     string // Valor da esquerda
+	Operator string // O símbolo (ex: "+")
+	Right    string // Valor da direita
+}
 
 type Parser struct {
 	l      *lexer.Lexer
@@ -55,7 +61,7 @@ func (ss *ServiceStatement) statementNode() {}
 
 type VarDeclarationStatement struct {
 	Name  string
-	Value string
+	Value interface{} // Mudamos de string para interface{}
 }
 
 func (vds *VarDeclarationStatement) statementNode() {}
@@ -172,7 +178,7 @@ func (p *Parser) parsePrint() Statement {
 
 func (p *Parser) parseVarDeclaration() Statement {
 	stmt := &VarDeclarationStatement{}
-	p.nextToken()
+	p.nextToken() // pula 'let'
 
 	if p.curTok.Type != lexer.IDENT {
 		fmt.Println("Erro: esperado nome da variável")
@@ -187,9 +193,26 @@ func (p *Parser) parseVarDeclaration() Statement {
 	}
 	p.nextToken()
 
-	if p.curTok.Type == lexer.STRING || p.curTok.Type == lexer.NUMBER || p.curTok.Type == lexer.IDENT {
-		stmt.Value = p.curTok.Literal
-		p.nextToken()
+	// Guardamos o primeiro valor (pode ser o único ou o começo de uma conta)
+	leftVal := p.curTok.Literal
+	p.nextToken()
+
+	// MÁGICA: Se o próximo token for um PLUS (+), criamos uma Expression
+	if p.curTok.Type == lexer.PLUS {
+		operator := p.curTok.Literal
+		p.nextToken() // pula o '+'
+
+		rightVal := p.curTok.Literal
+		p.nextToken() // pula o valor da direita
+
+		stmt.Value = &Expression{
+			Left:     leftVal,
+			Operator: operator,
+			Right:    rightVal,
+		}
+	} else {
+		// Se não tiver '+', salva como valor simples (comportamento antigo)
+		stmt.Value = leftVal
 	}
 
 	if p.curTok.Type != lexer.SEMICOLON {
