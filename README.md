@@ -3,9 +3,12 @@
 Uma linguagem focada em microserviços e backend, construída em Go.
 
 ## 📋 Status Atual
-- **Lexer**: Reconhece keywords (`service`, `port`, `let`, `print`), identificadores, strings e números.
-- **Parser**: Constrói a árvore de sintaxe (AST) com suporte a blocos de serviço `{ }`.
-- **Eval (Interpretador)**: Gerencia memória de variáveis e **executa um servidor HTTP real** baseado nas definições do código.
+- **Lexer**: Reconhece símbolos matemáticos (+, =).
+- **Parser**: Constrói expressões binárias (Soma).
+- **Eval (Interpretador)**:
+  - Executa servidores HTTP.
+  - Resolve variáveis dinamicamente.
+  - Realiza cálculos matemáticos em tempo de execução.
 
 ## 🛠️ Como Testar
 
@@ -13,10 +16,12 @@ Uma linguagem focada em microserviços e backend, construída em Go.
 2. No arquivo `teste.ok`, defina seu serviço:
 
 <pre>```ok
-  service meuapp port 8081 {
-       let mensagem = "Ola Mundo! Este dado vem da variavel da Okay.";
-       print("Servidor configurado e pronto.");
-   }```</pre>
+service calculadora port 8081 {
+    let preco = 100;
+    let taxa = 15;
+    let total = preco + taxa;
+    print("Resultado:", total);
+}```</pre>
 
 
 3. Execute o compilador:
