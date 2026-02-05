@@ -42,9 +42,9 @@ func Eval(node interface{}, env *Environment) {
 			fmt.Printf("Erro crítico: %s\n", err)
 		}
 
-	// --- AQUI É O IF (A NOVA TAREFA) ---
+	// --- IF ELSE ---
 	case *parser.IfStatement:
-		// 1. Pega os valores da condição (ex: preco > 100)
+		// 1. Pega os valores da condição (resolvendo variáveis)
 		leftVal := n.Condition.Left
 		if v, ok := env.vars[n.Condition.Left]; ok {
 			leftVal = v
@@ -54,7 +54,7 @@ func Eval(node interface{}, env *Environment) {
 			rightVal = v
 		}
 
-		// 2. Transforma em número para comparar de verdade
+		// 2. Transforma em número
 		leftNum, _ := strconv.Atoi(leftVal)
 		rightNum, _ := strconv.Atoi(rightVal)
 
@@ -69,9 +69,14 @@ func Eval(node interface{}, env *Environment) {
 			entrarNoIf = leftNum == rightNum
 		}
 
-		// 4. Se for verdade, ele manda rodar os comandos que estão dentro do IF
+		// 4. LÓGICA DE DECISÃO: IF ou ELSE
 		if entrarNoIf {
 			for _, stmt := range n.Consequence {
+				Eval(stmt, env)
+			}
+		} else {
+			// Se a condição foi falsa, executa o que está no bloco 'Alternative' (o Else)
+			for _, stmt := range n.Alternative {
 				Eval(stmt, env)
 			}
 		}

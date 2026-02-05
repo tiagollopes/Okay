@@ -1,15 +1,8 @@
-service seguranca port 8081 {
-    let idade = 20;
-    let limite = 18;
-
-    if (idade > limite) {
-        print("Acesso Permitido: Voce e maior de idade.");
-    }
-
+service banco port 8081 {
     let saldo = 50;
     if (saldo > 100) {
-        print("Este print NAO deve aparecer porque 50 nao e maior que 100.");
+        print("Rico!");
+    } else {
+        print("Saldo modesto.");
     }
-
-    print("Fim da verificacao.");
 }

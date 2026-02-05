@@ -68,7 +68,8 @@ func (vds *VarDeclarationStatement) statementNode() {}
 
 type IfStatement struct {
 	Condition Expression // ex: preco > 100
-	Consequence []Statement // o que está dentro das chaves { }
+	Consequence []Statement // IF
+	Alternative []Statement // ELSE
 }
 
 func (is *IfStatement) statementNode() {}
@@ -239,25 +240,23 @@ func (p *Parser) parseIf() Statement {
 	stmt := &IfStatement{}
 	p.nextToken() // pula o 'if'
 
-	// 1. Lendo a condição (ex: preco > 100)
+	// 1. Condição
 	if p.curTok.Type != lexer.LPAREN {
 		fmt.Println("Erro: esperado '(' após if")
 		return nil
 	}
 	p.nextToken()
 
-	// Aqui montamos a nossa Expression de comparação
-	cond := Expression{}
-	cond.Left = p.curTok.Literal
+	cond := Expression{
+		Left:     p.curTok.Literal,
+		Operator: "",
+		Right:    "",
+	}
 	p.nextToken()
-
-	// Aqui ele vai pegar o >, < ou ==
 	cond.Operator = p.curTok.Literal
 	p.nextToken()
-
 	cond.Right = p.curTok.Literal
 	p.nextToken()
-
 	stmt.Condition = cond
 
 	if p.curTok.Type != lexer.RPAREN {
@@ -266,7 +265,7 @@ func (p *Parser) parseIf() Statement {
 	}
 	p.nextToken()
 
-	// 2. Lendo o corpo do IF { ... }
+	// 2. Bloco IF
 	if p.curTok.Type != lexer.LBRACE {
 		fmt.Println("Erro: esperado '{' para iniciar bloco if")
 		return nil
@@ -281,7 +280,30 @@ func (p *Parser) parseIf() Statement {
 	}
 
 	if p.curTok.Type == lexer.RBRACE {
-		p.nextToken()
+		p.nextToken() // pula '}'
+	}
+
+	// 3. BLOCO ELSE
+	// Se a próxima palavra é "else"
+	if p.curTok.Type == lexer.IDENT && p.curTok.Literal == "else" {
+		p.nextToken() // pula 'else'
+
+		if p.curTok.Type != lexer.LBRACE {
+			fmt.Println("Erro: esperado '{' após else")
+			return nil
+		}
+		p.nextToken() // pula '{'
+
+		for p.curTok.Type != lexer.RBRACE && p.curTok.Type != lexer.EOF {
+			innerStmt := p.ParseStatement()
+			if innerStmt != nil {
+				stmt.Alternative = append(stmt.Alternative, innerStmt)
+			}
+		}
+
+		if p.curTok.Type == lexer.RBRACE {
+			p.nextToken() // pula '}' do else
+		}
 	}
 
 	return stmt
