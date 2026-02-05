@@ -197,10 +197,12 @@ func (p *Parser) parseVarDeclaration() Statement {
 	leftVal := p.curTok.Literal
 	p.nextToken()
 
-	// MÁGICA: Se o próximo token for um PLUS (+), criamos uma Expression
-	if p.curTok.Type == lexer.PLUS {
+	// Aceitamos qualquer um dos 4 operadores
+	if p.curTok.Type == lexer.PLUS || p.curTok.Type == lexer.MINUS ||
+	   p.curTok.Type == lexer.ASTERISK || p.curTok.Type == lexer.SLASH {
+
 		operator := p.curTok.Literal
-		p.nextToken() // pula o '+'
+		p.nextToken() // pula o operador (+, -, *, /)
 
 		rightVal := p.curTok.Literal
 		p.nextToken() // pula o valor da direita
@@ -211,7 +213,6 @@ func (p *Parser) parseVarDeclaration() Statement {
 			Right:    rightVal,
 		}
 	} else {
-		// Se não tiver '+', salva como valor simples (comportamento antigo)
 		stmt.Value = leftVal
 	}
 

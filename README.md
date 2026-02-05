@@ -3,7 +3,7 @@
 Uma linguagem focada em microserviços e backend, construída em Go.
 
 ## 📋 Status Atual
-- **Lexer**: Reconhece símbolos matemáticos (+, =).
+- **Lexer**: Reconhece símbolos matemáticos (+, - , *, /, =).
 - **Parser**: Constrói expressões binárias (Soma).
 - **Eval (Interpretador)**:
   - Executa servidores HTTP.
@@ -17,11 +17,18 @@ Uma linguagem focada em microserviços e backend, construída em Go.
 
 <pre>```ok
 service calculadora port 8081 {
-    let preco = 100;
-    let taxa = 15;
-    let total = preco + taxa;
-    print("Resultado:", total);
-}```</pre>
+    let a = 100;
+    let b = 20;
+    let soma = a + b;
+    let sub  = a - b;
+    let mult = a * 2;
+    let div  = a / b;
+    print("Soma:", soma);
+    print("Sub:", sub);
+    print("Mult:", mult);
+    print("Div:", div);
+}
+```</pre>
 
 
 3. Execute o compilador:

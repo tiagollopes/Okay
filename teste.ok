@@ -1,9 +1,14 @@
 service calculadora port 8081 {
-    let preco = 100;
-    let taxa = 15;
-    let total = preco + taxa;
+    let a = 100;
+    let b = 20;
 
-    print("O preco e:", preco);
-    print("A taxa e:", taxa);
-    print("O TOTAL calculado e:", total);
+    let soma = a + b;
+    let sub  = a - b;
+    let mult = a * 2;
+    let div  = a / b;
+
+    print("Soma:", soma);
+    print("Sub:", sub);
+    print("Mult:", mult);
+    print("Div:", div);
 }

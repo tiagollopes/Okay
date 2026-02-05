@@ -20,6 +20,9 @@ const (
 
 	// Symbols
 	PLUS      TokenType = "+"
+	MINUS     TokenType = "-"
+	ASTERISK  TokenType = "*"
+	SLASH     TokenType = "/"
 	ASSIGN    TokenType = "="
 	LBRACE    TokenType = "{"
 	RBRACE    TokenType = "}"

@@ -27,6 +27,15 @@ func (l *Lexer) NextToken() Token {
 	case '+':
 		l.pos++
 		return Token{Type: PLUS, Literal: "+"}
+	case '-': // <--- ADICIONAR
+		l.pos++
+		return Token{Type: MINUS, Literal: "-"}
+	case '*': // <--- ADICIONAR
+		l.pos++
+		return Token{Type: ASTERISK, Literal: "*"}
+	case '/': // <--- ADICIONAR
+		l.pos++
+		return Token{Type: SLASH, Literal: "/"}
 	case '=':
 		l.pos++
 		return Token{Type: ASSIGN, Literal: "="}

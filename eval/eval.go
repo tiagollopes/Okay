@@ -78,8 +78,20 @@ func Eval(node interface{}, env *Environment) {
 			rightNum, _ := strconv.Atoi(rightVal)
 
 			var resultado int
-			if val.Operator == "+" {
+			switch val.Operator {
+			case "+":
 				resultado = leftNum + rightNum
+			case "-":
+				resultado = leftNum - rightNum
+			case "*":
+				resultado = leftNum * rightNum
+			case "/":
+				if rightNum != 0 {
+					resultado = leftNum / rightNum
+				} else {
+					fmt.Println("Erro: Divisão por zero!")
+					resultado = 0
+				}
 			}
 
 			env.vars[n.Name] = strconv.Itoa(resultado)
