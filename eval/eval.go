@@ -3,7 +3,7 @@ package eval
 import (
 	"fmt"
 	"net/http"
-	"strconv" // <--- converte strings em números
+	"strconv"
 	"github.com/tiagollopes/okay/parser"
 )
 
@@ -25,87 +25,92 @@ func Eval(node interface{}, env *Environment) {
 
 	case *parser.ServiceStatement:
 		fmt.Printf("==> [OKAY] Servidor '%s' ouvindo na porta %s...\n", n.Name, n.Port)
-
-		// 1. Primeiro, executamos o que está dentro do serviço para carregar as variáveis
 		for _, stmt := range n.Body {
 			Eval(stmt, env)
 		}
-
-		// 2. Configuramos a resposta do servidor
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			// Vamos tentar buscar uma variável chamada 'mensagem' na memória da Okay
 			msg, ok := env.vars["mensagem"]
 			if !ok {
-				msg = "Serviço Online (Sem variável 'mensagem' definida)"
+				msg = "Serviço Online"
 			}
-
 			fmt.Fprintf(w, "--- Okay Language Backend ---\n")
 			fmt.Fprintf(w, "Servico: %s\n", n.Name)
 			fmt.Fprintf(w, "Resposta: %s\n", msg)
 		})
-
-		// 3. Iniciamos o servidor
 		err := http.ListenAndServe(":"+n.Port, nil)
 		if err != nil {
 			fmt.Printf("Erro crítico: %s\n", err)
 		}
 
+	// --- AQUI É O IF (A NOVA TAREFA) ---
+	case *parser.IfStatement:
+		// 1. Pega os valores da condição (ex: preco > 100)
+		leftVal := n.Condition.Left
+		if v, ok := env.vars[n.Condition.Left]; ok {
+			leftVal = v
+		}
+		rightVal := n.Condition.Right
+		if v, ok := env.vars[n.Condition.Right]; ok {
+			rightVal = v
+		}
+
+		// 2. Transforma em número para comparar de verdade
+		leftNum, _ := strconv.Atoi(leftVal)
+		rightNum, _ := strconv.Atoi(rightVal)
+
+		// 3. Verifica se a condição é verdadeira
+		entrarNoIf := false
+		switch n.Condition.Operator {
+		case ">":
+			entrarNoIf = leftNum > rightNum
+		case "<":
+			entrarNoIf = leftNum < rightNum
+		case "==":
+			entrarNoIf = leftNum == rightNum
+		}
+
+		// 4. Se for verdade, ele manda rodar os comandos que estão dentro do IF
+		if entrarNoIf {
+			for _, stmt := range n.Consequence {
+				Eval(stmt, env)
+			}
+		}
+
 	case *parser.VarDeclarationStatement:
-		// Verificamos o que tem dentro do valor
 		switch val := n.Value.(type) {
-
 		case string:
-			// Se for texto puro, salva direto
 			env.vars[n.Name] = val
-
 		case *parser.Expression:
-			// 1. Resolver o lado ESQUERDO
 			leftVal := val.Left
-			// Se for um nome de variável, buscamos o valor dela
 			if v, ok := env.vars[val.Left]; ok {
 				leftVal = v
 			}
-
-			// 2. Resolver o lado DIREITO
 			rightVal := val.Right
-			// Se for um nome de variável, buscamos o valor dela
 			if v, ok := env.vars[val.Right]; ok {
 				rightVal = v
 			}
-
-			// 3. Agora sim convertemos e somamos
 			leftNum, _ := strconv.Atoi(leftVal)
 			rightNum, _ := strconv.Atoi(rightVal)
 
 			var resultado int
 			switch val.Operator {
-			case "+":
-				resultado = leftNum + rightNum
-			case "-":
-				resultado = leftNum - rightNum
-			case "*":
-				resultado = leftNum * rightNum
+			case "+": resultado = leftNum + rightNum
+			case "-": resultado = leftNum - rightNum
+			case "*": resultado = leftNum * rightNum
 			case "/":
 				if rightNum != 0 {
 					resultado = leftNum / rightNum
-				} else {
-					fmt.Println("Erro: Divisão por zero!")
-					resultado = 0
 				}
 			}
-
 			env.vars[n.Name] = strconv.Itoa(resultado)
 		}
+
 	case *parser.PrintStatement:
 		fmt.Print("[LOG]: ")
 		for _, arg := range n.Args {
 			if arg.Type == "IDENT" {
 				val, ok := env.vars[arg.Value]
-				if ok {
-					fmt.Print(val, " ")
-				} else {
-					fmt.Printf("<%s?> ", arg.Value)
-				}
+				if ok { fmt.Print(val, " ") } else { fmt.Printf("<%s?> ", arg.Value) }
 			} else {
 				fmt.Print(arg.Value, " ")
 			}

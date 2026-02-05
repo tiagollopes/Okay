@@ -24,16 +24,22 @@ func (l *Lexer) NextToken() Token {
 
 	// Symbols
 	switch ch {
+	case '>':
+		l.pos++
+		return Token{Type: GT, Literal: ">"}
+	case '<':
+		l.pos++
+		return Token{Type: LT, Literal: "<"}
 	case '+':
 		l.pos++
 		return Token{Type: PLUS, Literal: "+"}
-	case '-': // <--- ADICIONAR
+	case '-':
 		l.pos++
 		return Token{Type: MINUS, Literal: "-"}
-	case '*': // <--- ADICIONAR
+	case '*':
 		l.pos++
 		return Token{Type: ASTERISK, Literal: "*"}
-	case '/': // <--- ADICIONAR
+	case '/':
 		l.pos++
 		return Token{Type: SLASH, Literal: "/"}
 	case '=':
@@ -74,7 +80,7 @@ func (l *Lexer) NextToken() Token {
 				return Token{Type: SERVICE, Literal: lit}
 			case "port":
 				return Token{Type: PORT, Literal: lit}
-			case "let": // <--- NOVO
+			case "let":
 				return Token{Type: LET, Literal: lit}
 			default:
 				return Token{Type: IDENT, Literal: lit}

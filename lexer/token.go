@@ -31,6 +31,11 @@ const (
 	COMMA     TokenType = ","
 	SEMICOLON TokenType = ";"
 
+	// Comparadores
+	GT TokenType = ">"
+	LT TokenType = "<"
+	EQ TokenType = "==" // Igualdade (comparação)
+
 	EOF TokenType = "EOF"
 )
 

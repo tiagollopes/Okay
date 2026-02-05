@@ -1,14 +1,15 @@
-service calculadora port 8081 {
-    let a = 100;
-    let b = 20;
+service seguranca port 8081 {
+    let idade = 20;
+    let limite = 18;
 
-    let soma = a + b;
-    let sub  = a - b;
-    let mult = a * 2;
-    let div  = a / b;
+    if (idade > limite) {
+        print("Acesso Permitido: Voce e maior de idade.");
+    }
 
-    print("Soma:", soma);
-    print("Sub:", sub);
-    print("Mult:", mult);
-    print("Div:", div);
+    let saldo = 50;
+    if (saldo > 100) {
+        print("Este print NAO deve aparecer porque 50 nao e maior que 100.");
+    }
+
+    print("Fim da verificacao.");
 }

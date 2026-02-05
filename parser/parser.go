@@ -66,6 +66,13 @@ type VarDeclarationStatement struct {
 
 func (vds *VarDeclarationStatement) statementNode() {}
 
+type IfStatement struct {
+	Condition Expression // ex: preco > 100
+	Consequence []Statement // o que está dentro das chaves { }
+}
+
+func (is *IfStatement) statementNode() {}
+
 //
 // ===== PARSER (Lógica de leitura) =====
 //
@@ -90,6 +97,9 @@ func (p *Parser) ParseStatement() Statement {
 	case lexer.IDENT:
 		if p.curTok.Literal == "print" {
 			return p.parsePrint()
+		}
+		if p.curTok.Literal == "if" {
+			return p.parseIf()
 		}
 	case lexer.LET:
 		return p.parseVarDeclaration()
@@ -221,6 +231,58 @@ func (p *Parser) parseVarDeclaration() Statement {
 		return nil
 	}
 	p.nextToken()
+
+	return stmt
+}
+
+func (p *Parser) parseIf() Statement {
+	stmt := &IfStatement{}
+	p.nextToken() // pula o 'if'
+
+	// 1. Lendo a condição (ex: preco > 100)
+	if p.curTok.Type != lexer.LPAREN {
+		fmt.Println("Erro: esperado '(' após if")
+		return nil
+	}
+	p.nextToken()
+
+	// Aqui montamos a nossa Expression de comparação
+	cond := Expression{}
+	cond.Left = p.curTok.Literal
+	p.nextToken()
+
+	// Aqui ele vai pegar o >, < ou ==
+	cond.Operator = p.curTok.Literal
+	p.nextToken()
+
+	cond.Right = p.curTok.Literal
+	p.nextToken()
+
+	stmt.Condition = cond
+
+	if p.curTok.Type != lexer.RPAREN {
+		fmt.Println("Erro: esperado ')' após condição")
+		return nil
+	}
+	p.nextToken()
+
+	// 2. Lendo o corpo do IF { ... }
+	if p.curTok.Type != lexer.LBRACE {
+		fmt.Println("Erro: esperado '{' para iniciar bloco if")
+		return nil
+	}
+	p.nextToken()
+
+	for p.curTok.Type != lexer.RBRACE && p.curTok.Type != lexer.EOF {
+		innerStmt := p.ParseStatement()
+		if innerStmt != nil {
+			stmt.Consequence = append(stmt.Consequence, innerStmt)
+		}
+	}
+
+	if p.curTok.Type == lexer.RBRACE {
+		p.nextToken()
+	}
 
 	return stmt
 }
