@@ -1,8 +1,15 @@
 service banco port 8081 {
-    let saldo = 50;
-    if (saldo > 100) {
-        print("Rico!");
+    // Definição de valores iniciais
+    let saldo = 500;
+    let saque = 150;
+    let taxa = 5;
+
+    let total_saque = saque + taxa;
+
+    // Regra de negócio: verificar saldo disponível
+    if (total_saque < saldo) {
+        print("Saque autorizado! Total com taxa:", total_saque);
     } else {
-        print("Saldo modesto.");
+        print("Saldo insuficiente. Saldo atual:", saldo);
     }
 }

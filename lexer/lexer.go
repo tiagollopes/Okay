@@ -40,6 +40,13 @@ func (l *Lexer) NextToken() Token {
 		l.pos++
 		return Token{Type: ASTERISK, Literal: "*"}
 	case '/':
+		// Espiamos o próximo caractere sem mover o cursor ainda
+		if l.peekChar() == '/' {
+			// É um comentário! Vamos pular até o fim da linha
+			l.skipComment()
+			return l.NextToken() // Reinicia a busca pelo próximo token real
+		}
+		// Se for apenas um '/', é divisão normal
 		l.pos++
 		return Token{Type: SLASH, Literal: "/"}
 	case '=':
@@ -67,24 +74,24 @@ func (l *Lexer) NextToken() Token {
 		return l.readString()
 	}
 
-	// Identifier or keyword
-	if unicode.IsLetter(ch) {
+	// Identifier or keyword (Suporta letras e Underline _)
+	if unicode.IsLetter(ch) || ch == '_' {
 		start := l.pos
-		for l.pos < len(l.input) && (unicode.IsLetter(l.input[l.pos]) || unicode.IsDigit(l.input[l.pos])) {
+		for l.pos < len(l.input) && (unicode.IsLetter(l.input[l.pos]) || unicode.IsDigit(l.input[l.pos]) || l.input[l.pos] == '_') {
 			l.pos++
 		}
 		lit := string(l.input[start:l.pos])
 
 		switch lit {
-			case "service":
-				return Token{Type: SERVICE, Literal: lit}
-			case "port":
-				return Token{Type: PORT, Literal: lit}
-			case "let":
-				return Token{Type: LET, Literal: lit}
-			default:
-				return Token{Type: IDENT, Literal: lit}
-			}
+		case "service":
+			return Token{Type: SERVICE, Literal: lit}
+		case "port":
+			return Token{Type: PORT, Literal: lit}
+		case "let":
+			return Token{Type: LET, Literal: lit}
+		default:
+			return Token{Type: IDENT, Literal: lit}
+		}
 	}
 
 	// Number
@@ -121,3 +128,17 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
+// peekChar olha o próximo caractere sem avançar a posição
+func (l *Lexer) peekChar() rune {
+	if l.pos+1 >= len(l.input) {
+		return 0
+	}
+	return l.input[l.pos+1]
+}
+
+// skipComment pula todos os caracteres até encontrar uma quebra de linha
+func (l *Lexer) skipComment() {
+	for l.pos < len(l.input) && l.input[l.pos] != '\n' {
+		l.pos++
+	}
+}
