@@ -42,40 +42,47 @@ func Eval(node interface{}, env *Environment) {
 			fmt.Printf("Erro crítico: %s\n", err)
 		}
 
-	// --- IF ELSE ---
+	// --- LÓGICA DO IF / ELSE COM SUPORTE A BOOLEANO ---
 	case *parser.IfStatement:
-		// 1. Pega os valores da condição (resolvendo variáveis)
-		leftVal := n.Condition.Left
-		if v, ok := env.vars[n.Condition.Left]; ok {
-			leftVal = v
-		}
-		rightVal := n.Condition.Right
-		if v, ok := env.vars[n.Condition.Right]; ok {
-			rightVal = v
-		}
-
-		// 2. Transforma em número
-		leftNum, _ := strconv.Atoi(leftVal)
-		rightNum, _ := strconv.Atoi(rightVal)
-
-		// 3. Verifica se a condição é verdadeira
 		entrarNoIf := false
-		switch n.Condition.Operator {
-		case ">":
-			entrarNoIf = leftNum > rightNum
-		case "<":
-			entrarNoIf = leftNum < rightNum
-		case "==":
-			entrarNoIf = leftNum == rightNum
+
+		// Caso 1: Condição simples, sem operador (ex: if (logado))
+		if n.Condition.Operator == "" {
+			val := n.Condition.Left
+			if v, ok := env.vars[n.Condition.Left]; ok {
+				val = v
+			}
+			// Se o valor na variável for a string "true", a condição é verdadeira
+			entrarNoIf = (val == "true")
+		} else {
+			// Caso 2: Comparação matemática (ex: if (idade > 18))
+			leftVal := n.Condition.Left
+			if v, ok := env.vars[n.Condition.Left]; ok {
+				leftVal = v
+			}
+			rightVal := n.Condition.Right
+			if v, ok := env.vars[n.Condition.Right]; ok {
+				rightVal = v
+			}
+
+			leftNum, _ := strconv.Atoi(leftVal)
+			rightNum, _ := strconv.Atoi(rightVal)
+
+			switch n.Condition.Operator {
+			case ">":
+				entrarNoIf = leftNum > rightNum
+			case "<":
+				entrarNoIf = leftNum < rightNum
+			case "==":
+				entrarNoIf = leftVal == rightVal // Comparação de strings/valores
+			}
 		}
 
-		// 4. LÓGICA DE DECISÃO: IF ou ELSE
 		if entrarNoIf {
 			for _, stmt := range n.Consequence {
 				Eval(stmt, env)
 			}
-		} else {
-			// Se a condição foi falsa, executa o que está no bloco 'Alternative' (o Else)
+		} else if len(n.Alternative) > 0 {
 			for _, stmt := range n.Alternative {
 				Eval(stmt, env)
 			}
@@ -84,7 +91,9 @@ func Eval(node interface{}, env *Environment) {
 	case *parser.VarDeclarationStatement:
 		switch val := n.Value.(type) {
 		case string:
+			// Salva o valor direto (seja número, texto ou "true"/"false")
 			env.vars[n.Name] = val
+
 		case *parser.Expression:
 			leftVal := val.Left
 			if v, ok := env.vars[val.Left]; ok {
@@ -94,6 +103,7 @@ func Eval(node interface{}, env *Environment) {
 			if v, ok := env.vars[val.Right]; ok {
 				rightVal = v
 			}
+
 			leftNum, _ := strconv.Atoi(leftVal)
 			rightNum, _ := strconv.Atoi(rightVal)
 
@@ -115,7 +125,11 @@ func Eval(node interface{}, env *Environment) {
 		for _, arg := range n.Args {
 			if arg.Type == "IDENT" {
 				val, ok := env.vars[arg.Value]
-				if ok { fmt.Print(val, " ") } else { fmt.Printf("<%s?> ", arg.Value) }
+				if ok {
+					fmt.Print(val, " ")
+				} else {
+					fmt.Printf("<%s?> ", arg.Value)
+				}
 			} else {
 				fmt.Print(arg.Value, " ")
 			}

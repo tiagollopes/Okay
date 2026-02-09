@@ -240,7 +240,7 @@ func (p *Parser) parseIf() Statement {
 	stmt := &IfStatement{}
 	p.nextToken() // pula o 'if'
 
-	// 1. Condição
+	// 1. Lendo a condição
 	if p.curTok.Type != lexer.LPAREN {
 		fmt.Println("Erro: esperado '(' após if")
 		return nil
@@ -248,15 +248,23 @@ func (p *Parser) parseIf() Statement {
 	p.nextToken()
 
 	cond := Expression{
-		Left:     p.curTok.Literal,
+		Left:     p.curTok.Literal, // Pode ser o nome da variável ou o valor "true"/"false"
 		Operator: "",
 		Right:    "",
 	}
 	p.nextToken()
-	cond.Operator = p.curTok.Literal
-	p.nextToken()
-	cond.Right = p.curTok.Literal
-	p.nextToken()
+
+	// MÁGICA: Se o próximo token NÃO for o fechamento de parênteses ')',
+	// significa que temos uma comparação (>, <, ==)
+	if p.curTok.Type != lexer.RPAREN {
+		cond.Operator = p.curTok.Literal
+		p.nextToken()
+
+		cond.Right = p.curTok.Literal
+		p.nextToken()
+	}
+	// Se for ')', a condição fica apenas com o Left preenchido, o que o Eval entende como booleano.
+
 	stmt.Condition = cond
 
 	if p.curTok.Type != lexer.RPAREN {
@@ -265,7 +273,7 @@ func (p *Parser) parseIf() Statement {
 	}
 	p.nextToken()
 
-	// 2. Bloco IF
+	// 2. Bloco IF { ... }
 	if p.curTok.Type != lexer.LBRACE {
 		fmt.Println("Erro: esperado '{' para iniciar bloco if")
 		return nil
@@ -284,7 +292,6 @@ func (p *Parser) parseIf() Statement {
 	}
 
 	// 3. BLOCO ELSE
-	// Se a próxima palavra é "else"
 	if p.curTok.Type == lexer.IDENT && p.curTok.Literal == "else" {
 		p.nextToken() // pula 'else'
 

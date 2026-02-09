@@ -37,5 +37,8 @@ const (
 	EQ TokenType = "==" // Igualdade (comparação)
 
 	EOF TokenType = "EOF"
+
+	TRUE     TokenType = "TRUE"
+        FALSE    TokenType = "FALSE"
 )
 

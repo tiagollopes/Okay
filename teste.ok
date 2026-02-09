@@ -1,15 +1,24 @@
-service banco port 8081 {
-    // Definição de valores iniciais
-    let saldo = 500;
-    let saque = 150;
-    let taxa = 5;
+service checkout port 8081 {
+    // Configurações de sistema
+    let cupom_ativo = true;
+    let frete_gratis = false;
 
-    let total_saque = saque + taxa;
+    // Valores do pedido
+    let produto_preco = 150;
+    let desconto = 20;
+    let taxa_entrega = 15;
 
-    // Regra de negócio: verificar saldo disponível
-    if (total_saque < saldo) {
-        print("Saque autorizado! Total com taxa:", total_saque);
+    // A Okay resolve expressões complexas e nomes com underline
+    let total_com_desconto = produto_preco - desconto;
+
+    if (cupom_ativo) {
+        print("Cupom aplicado! Novo valor:", total_com_desconto);
+    }
+
+    if (frete_gratis) {
+        print("Frete: R$ 0");
     } else {
-        print("Saldo insuficiente. Saldo atual:", saldo);
+        let total_final = total_com_desconto + taxa_entrega;
+        print("Valor final com frete:", total_final);
     }
 }

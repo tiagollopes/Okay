@@ -4,15 +4,13 @@ Uma linguagem focada em microserviços e backend, construída em Go. A Okay tran
 
 ## 📋 Status Atual
 
-- **Lexer**: Reconhece símbolos matemáticos (`+`, `-`, `*`, `/`, `=`), comparadores (`>`, `<`, `==`), ignora comentários (`//`) e suporta identificadores complexos (ex: `total_saque`).
-- **Parser**: Construção de Árvore de Sintaxe Abstrata (AST) com suporte a:
-  - Declaração de variáveis dinâmicas.
-  - Expressões matemáticas com as 4 operações básicas.
-  - Estruturas de decisão completas (`if/else`).
+- **Lexer**: Suporte a símbolos matemáticos, comparadores, comentários (`//`), identificadores com `_` e palavras-chave booleanas (`true`/`false`).
+- **Parser**: Árvore de Sintaxe Abstrata (AST) com suporte a:
+  - Variáveis e Expressões Matemáticas.
+  - Estruturas `if/else` com suporte a condições diretas (booleanas) ou comparativas.
 - **Eval (Interpretador)**:
-  - Execução de servidores HTTP nativos por serviço.
-  - Gerenciamento de memória em tempo real (Ambiente de variáveis).
-  - Resolução de lógica condicional para regras de negócio.
+  - Gerenciamento de estados lógicos.
+  - Execução de servidores HTTP com lógica de negócio.
 
 ## 🛠️ Exemplo de Poder da Okay
 
@@ -20,20 +18,28 @@ Veja como a Okay resolve uma regra de negócio de saque bancário com taxa:
 
 <pre>
 ```ok
-service banco port 8081 {
-    // Definição de valores iniciais
-    let saldo = 500;
-    let saque = 150;
-    let taxa = 5;
+service checkout port 8081 {
+    // Configurações de sistema
+    let cupom_ativo = true;
+    let frete_gratis = false;
 
-    // A Okay resolve variáveis com underline e expressões matemáticas
-    let total_saque = saque + taxa;
+    // Valores do pedido
+    let produto_preco = 150;
+    let desconto = 20;
+    let taxa_entrega = 15;
 
-    // Lógica condicional para autorização
-    if (total_saque < saldo) {
-        print("Saque autorizado! Total com taxa:", total_saque);
+    // A Okay resolve expressões complexas e nomes com underline
+    let total_com_desconto = produto_preco - desconto;
+
+    if (cupom_ativo) {
+        print("Cupom aplicado! Novo valor:", total_com_desconto);
+    }
+
+    if (frete_gratis) {
+        print("Frete: R$ 0");
     } else {
-        print("Saldo insuficiente. Saldo atual:", saldo);
+        let total_final = total_com_desconto + taxa_entrega;
+        print("Valor final com frete:", total_final);
     }
 }
 ```
@@ -66,8 +72,6 @@ go run cmd/okay/main.go build teste.ok
 **cmd/:** Ponto de entrada (CLI) da linguagem.
 
 ## Próximos Desafios
-
-[ ] Adicionar suporte a tipos Booleanos (true/false).
 
 [ ] Criar loops de repetição (repeat).
 
