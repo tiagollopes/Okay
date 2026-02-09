@@ -14,21 +14,21 @@ Uma linguagem focada em microserviços e backend, construída em Go. A Okay tran
 
 ## 🛠️ Exemplo de Poder da Okay
 
-Veja como a Okay resolve uma regra de negócio de saque bancário com taxa:
+Este exemplo demonstra a Okay processando um microserviço de checkout com regras de negócio, lógica booleana e variáveis complexas:
 
 <pre>
 ```ok
 service checkout port 8081 {
-    // Configurações de sistema
+    // Configurações de sistema (Booleanos)
     let cupom_ativo = true;
     let frete_gratis = false;
 
-    // Valores do pedido
+    // Valores do pedido (Números e Underlines)
     let produto_preco = 150;
     let desconto = 20;
     let taxa_entrega = 15;
 
-    // A Okay resolve expressões complexas e nomes com underline
+    // Cálculos matemáticos em tempo de execução
     let total_com_desconto = produto_preco - desconto;
 
     if (cupom_ativo) {
@@ -38,6 +38,7 @@ service checkout port 8081 {
     if (frete_gratis) {
         print("Frete: R$ 0");
     } else {
+        // Lógica de fallback
         let total_final = total_com_desconto + taxa_entrega;
         print("Valor final com frete:", total_final);
     }
