@@ -56,7 +56,7 @@ service checkout port 8081 {
 
 3. Execute o interpretador:
 
-<pre>```go run cmd/okay/main.go build teste.ok```</pre>
+<pre>go run cmd/okay/main.go build teste.ok</pre>
 
 **Acesse no Navegador:** O servidor estará disponível em <pre>```http://localhost:8081/?produto=Monitor_Gamer&preco=500```</pre>.
 
