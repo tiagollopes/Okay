@@ -11,6 +11,7 @@ Uma linguagem focada em microserviços e backend, construída em Go. A Okay tran
 - **Eval (Interpretador)**:
   - Gerenciamento de estados lógicos.
   - Execução de servidores HTTP com lógica de negócio.
+  - Gerenciamento de estados e API Dinâmica (Integração total com Query Params da URL).
 
 ## 🛠️ Exemplo de Poder da Okay
 
@@ -43,6 +44,7 @@ service checkout port 8081 {
         print("Valor final com frete:", total_final);
     }
 }
+
 ```
 </pre>
 
@@ -60,7 +62,7 @@ go run cmd/okay/main.go build teste.ok
 ```
 </pre>
 
-**Acesse no Navegador:** O servidor estará disponível em http://localhost:8081.
+**Acesse no Navegador:** O servidor estará disponível em http://localhost:8081/?produto=Monitor_Gamer&preco=500.
 
 ## Estrutura do Projeto
 
@@ -76,7 +78,7 @@ go run cmd/okay/main.go build teste.ok
 
 [ ] Criar loops de repetição (repeat).
 
-[ ] Implementar captura de parâmetros via URL (Query Params).
+[ ] Implementar concatenação de strings.
 
 ***Feito por Tiago LLopes*** Santos/SP
 

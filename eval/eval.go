@@ -25,56 +25,79 @@ func Eval(node interface{}, env *Environment) {
 
 	case *parser.ServiceStatement:
 		fmt.Printf("==> [OKAY] Servidor '%s' ouvindo na porta %s...\n", n.Name, n.Port)
-		for _, stmt := range n.Body {
-			Eval(stmt, env)
-		}
+
+		// Variável de controle para saber se já carregamos os valores padrão
+		inicializado := false
+
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			msg, ok := env.vars["mensagem"]
-			if !ok {
-				msg = "Serviço Online"
+			if r.URL.Path == "/favicon.ico" {
+				return
 			}
-			fmt.Fprintf(w, "--- Okay Language Backend ---\n")
-			fmt.Fprintf(w, "Servico: %s\n", n.Name)
-			fmt.Fprintf(w, "Resposta: %s\n", msg)
+
+			// 1. CARGA INICIAL (Apenas no primeiro acesso e sem imprimir nada)
+			if !inicializado {
+				for _, stmt := range n.Body {
+					// Durante a carga inicial, não executamos os Prints
+					if _, isPrint := stmt.(*parser.PrintStatement); !isPrint {
+						Eval(stmt, env)
+					}
+				}
+				inicializado = true
+			}
+
+			// 2. ATUALIZAÇÃO VIA URL
+			query := r.URL.Query()
+			if len(query) > 0 {
+				fmt.Println("\n[REQUISIÇÃO]: Processando parâmetros...")
+				for key, values := range query {
+					if len(values) > 0 {
+						env.vars[key] = values[0]
+					}
+				}
+			}
+
+			// 3. EXECUÇÃO REAL (Aqui sim os Logs aparecem no terminal)
+			for _, stmt := range n.Body {
+				Eval(stmt, env)
+			}
+
+			fmt.Fprintf(w, "--- Okay Language API ---\nServico: %s\nStatus: OK", n.Name)
 		})
+
+		// Removido qualquer Eval(n.Body) daqui de fora para garantir silêncio total no boot
 		err := http.ListenAndServe(":"+n.Port, nil)
 		if err != nil {
 			fmt.Printf("Erro crítico: %s\n", err)
 		}
 
-	// --- LÓGICA DO IF / ELSE COM SUPORTE A BOOLEANO ---
 	case *parser.IfStatement:
 		entrarNoIf := false
+		leftVal := n.Condition.Left
+		if v, ok := env.vars[n.Condition.Left]; ok {
+			leftVal = v
+		}
 
-		// Caso 1: Condição simples, sem operador (ex: if (logado))
 		if n.Condition.Operator == "" {
-			val := n.Condition.Left
-			if v, ok := env.vars[n.Condition.Left]; ok {
-				val = v
-			}
-			// Se o valor na variável for a string "true", a condição é verdadeira
-			entrarNoIf = (val == "true")
+			entrarNoIf = (leftVal == "true")
 		} else {
-			// Caso 2: Comparação matemática (ex: if (idade > 18))
-			leftVal := n.Condition.Left
-			if v, ok := env.vars[n.Condition.Left]; ok {
-				leftVal = v
-			}
 			rightVal := n.Condition.Right
 			if v, ok := env.vars[n.Condition.Right]; ok {
 				rightVal = v
 			}
 
-			leftNum, _ := strconv.Atoi(leftVal)
-			rightNum, _ := strconv.Atoi(rightVal)
+			leftNum, errL := strconv.Atoi(leftVal)
+			rightNum, errR := strconv.Atoi(rightVal)
 
-			switch n.Condition.Operator {
-			case ">":
-				entrarNoIf = leftNum > rightNum
-			case "<":
-				entrarNoIf = leftNum < rightNum
-			case "==":
-				entrarNoIf = leftVal == rightVal // Comparação de strings/valores
+			if errL == nil && errR == nil {
+				switch n.Condition.Operator {
+				case ">": entrarNoIf = leftNum > rightNum
+				case "<": entrarNoIf = leftNum < rightNum
+				case "==": entrarNoIf = leftNum == rightNum
+				}
+			} else {
+				switch n.Condition.Operator {
+				case "==": entrarNoIf = leftVal == rightVal
+				}
 			}
 		}
 
@@ -89,11 +112,17 @@ func Eval(node interface{}, env *Environment) {
 		}
 
 	case *parser.VarDeclarationStatement:
+		// Se a variável já existe (veio da URL), não sobrescrevemos com o valor default
+		if _, jaExiste := env.vars[n.Name]; jaExiste {
+			// Exceto se for uma expressão matemática (precisamos recalcular com os novos dados)
+			if _, isExpr := n.Value.(*parser.Expression); !isExpr {
+				return
+			}
+		}
+
 		switch val := n.Value.(type) {
 		case string:
-			// Salva o valor direto (seja número, texto ou "true"/"false")
 			env.vars[n.Name] = val
-
 		case *parser.Expression:
 			leftVal := val.Left
 			if v, ok := env.vars[val.Left]; ok {
@@ -103,7 +132,6 @@ func Eval(node interface{}, env *Environment) {
 			if v, ok := env.vars[val.Right]; ok {
 				rightVal = v
 			}
-
 			leftNum, _ := strconv.Atoi(leftVal)
 			rightNum, _ := strconv.Atoi(rightVal)
 
