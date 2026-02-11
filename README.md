@@ -20,32 +20,38 @@ Este exemplo demonstra a Okay processando um microserviço de checkout com regra
 
 <pre>
 ```ok
-service checkout port 8081 {
-    // Configurações de sistema (Booleanos)
-    let cupom_ativo = true;
-    let frete_gratis = false;
+      service checkout port 8081 {
+          // 1. Configurações (Podem ser mudadas via URL: ?tentativas=5)
+          let cupom_ativo = true;
+          let frete_gratis = false;
+          let tentativas = 2;
 
-    // Valores do pedido (Números e Underlines)
-    let produto_preco = 150;
-    let desconto = 20;
-    let taxa_entrega = 15;
+          // 2. Valores
+          let produto_preco = 150;
+          let desconto = 20;
+          let taxa_entrega = 15;
 
-    // Cálculos matemáticos em tempo de execução
-    let total_com_desconto = produto_preco - desconto;
+          // 3. Lógica Matemática
+          let total_com_desconto = produto_preco - desconto;
 
-    if (cupom_ativo) {
-        print("Cupom aplicado! Novo valor:", total_com_desconto);
-    }
+          // 4. Teste de Loop (Processamento repetitivo)
+          print("Iniciando verificacao de seguranca...");
+          repeat tentativas {
+              print("-> Checando integridade do pedido...");
+          }
 
-    if (frete_gratis) {
-        print("Frete: R$ 0");
-    } else {
-        // Lógica de fallback
-        let total_final = total_com_desconto + taxa_entrega;
-        print("Valor final com frete:", total_final);
-    }
-}
+          // 5. Lógica de Condicional
+          if (cupom_ativo) {
+              print("Cupom aplicado! Subtotal:", total_com_desconto);
+          }
 
+          if (frete_gratis) {
+              print("Frete: R$ 0");
+          } else {
+              let total_final = total_com_desconto + taxa_entrega;
+              print("Valor final com frete:", total_final);
+          }
+      }
 ```
 </pre>
 
