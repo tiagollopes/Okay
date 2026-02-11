@@ -5,6 +5,14 @@ import (
 
 	"github.com/tiagollopes/okay/lexer"
 )
+
+// Adicione na definição de structs
+type RepeatStatement struct {
+	Count       string      // Pode ser um número ou uma variável
+	Body        []Statement
+}
+func (rs *RepeatStatement) statementNode() {}
+
 // Representa uma operação, ex: 10 + 5
 type Expression struct {
 	Left     string // Valor da esquerda
@@ -95,6 +103,8 @@ func (p *Parser) ParseStatement() Statement {
 	switch p.curTok.Type {
 	case lexer.SERVICE:
 		return p.parseService()
+	case lexer.REPEAT: // <-- Porta de entrada para o Token REPEAT
+		return p.parseRepeat()
 	case lexer.IDENT:
 		if p.curTok.Literal == "print" {
 			return p.parsePrint()
@@ -313,5 +323,31 @@ func (p *Parser) parseIf() Statement {
 		}
 	}
 
+	return stmt
+}
+
+func (p *Parser) parseRepeat() Statement {
+	stmt := &RepeatStatement{}
+	p.nextToken() // pula 'repeat'
+
+	stmt.Count = p.curTok.Literal // Pega o número ou a variável
+	p.nextToken()
+
+	if p.curTok.Type != lexer.LBRACE {
+		fmt.Println("Erro: esperado '{' após quantidade no repeat")
+		return nil
+	}
+	p.nextToken() // pula '{'
+
+	for p.curTok.Type != lexer.RBRACE && p.curTok.Type != lexer.EOF {
+		innerStmt := p.ParseStatement()
+		if innerStmt != nil {
+			stmt.Body = append(stmt.Body, innerStmt)
+		}
+	}
+
+	if p.curTok.Type == lexer.RBRACE {
+		p.nextToken() // pula '}'
+	}
 	return stmt
 }

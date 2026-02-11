@@ -13,6 +13,7 @@ const (
 	PORT    TokenType = "PORT"
 	LET     TokenType = "LET"
 
+
 	// Identifiers & literals
 	IDENT  TokenType = "IDENT"
 	NUMBER TokenType = "NUMBER"
@@ -35,6 +36,8 @@ const (
 	GT TokenType = ">"
 	LT TokenType = "<"
 	EQ TokenType = "==" // Igualdade (comparação)
+
+	REPEAT = "REPEAT"
 
 	EOF TokenType = "EOF"
 

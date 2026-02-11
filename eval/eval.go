@@ -7,6 +7,8 @@ import (
 	"github.com/tiagollopes/okay/parser"
 )
 
+var modoSilencioso = false
+
 type Environment struct {
 	vars map[string]string
 }
@@ -26,7 +28,6 @@ func Eval(node interface{}, env *Environment) {
 	case *parser.ServiceStatement:
 		fmt.Printf("==> [OKAY] Servidor '%s' ouvindo na porta %s...\n", n.Name, n.Port)
 
-		// Variável de controle para saber se já carregamos os valores padrão
 		inicializado := false
 
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -34,14 +35,13 @@ func Eval(node interface{}, env *Environment) {
 				return
 			}
 
-			// 1. CARGA INICIAL (Apenas no primeiro acesso e sem imprimir nada)
+			// 1. CARGA INICIAL TOTALMENTE SILENCIOSA
 			if !inicializado {
+				modoSilencioso = true // Ativa o silêncio total
 				for _, stmt := range n.Body {
-					// Durante a carga inicial, não executamos os Prints
-					if _, isPrint := stmt.(*parser.PrintStatement); !isPrint {
-						Eval(stmt, env)
-					}
+					Eval(stmt, env)
 				}
+				modoSilencioso = false // Desativa o silêncio para a execução real
 				inicializado = true
 			}
 
@@ -56,7 +56,7 @@ func Eval(node interface{}, env *Environment) {
 				}
 			}
 
-			// 3. EXECUÇÃO REAL (Aqui sim os Logs aparecem no terminal)
+			// 3. EXECUÇÃO REAL (Com logs liberados)
 			for _, stmt := range n.Body {
 				Eval(stmt, env)
 			}
@@ -64,10 +64,26 @@ func Eval(node interface{}, env *Environment) {
 			fmt.Fprintf(w, "--- Okay Language API ---\nServico: %s\nStatus: OK", n.Name)
 		})
 
-		// Removido qualquer Eval(n.Body) daqui de fora para garantir silêncio total no boot
 		err := http.ListenAndServe(":"+n.Port, nil)
 		if err != nil {
 			fmt.Printf("Erro crítico: %s\n", err)
+		}
+
+	case *parser.RepeatStatement:
+		countVal := n.Count
+		if v, ok := env.vars[n.Count]; ok {
+			countVal = v
+		}
+
+		times, err := strconv.Atoi(countVal)
+		if err != nil {
+			return
+		}
+
+		for i := 0; i < times; i++ {
+			for _, stmt := range n.Body {
+				Eval(stmt, env)
+			}
 		}
 
 	case *parser.IfStatement:
@@ -112,9 +128,7 @@ func Eval(node interface{}, env *Environment) {
 		}
 
 	case *parser.VarDeclarationStatement:
-		// Se a variável já existe (veio da URL), não sobrescrevemos com o valor default
 		if _, jaExiste := env.vars[n.Name]; jaExiste {
-			// Exceto se for uma expressão matemática (precisamos recalcular com os novos dados)
 			if _, isExpr := n.Value.(*parser.Expression); !isExpr {
 				return
 			}
@@ -149,19 +163,22 @@ func Eval(node interface{}, env *Environment) {
 		}
 
 	case *parser.PrintStatement:
-		fmt.Print("[LOG]: ")
-		for _, arg := range n.Args {
-			if arg.Type == "IDENT" {
-				val, ok := env.vars[arg.Value]
-				if ok {
-					fmt.Print(val, " ")
+		// SÓ IMPRIME SE NÃO ESTIVER NO MODO SILENCIOSO
+		if !modoSilencioso {
+			fmt.Print("[LOG]: ")
+			for _, arg := range n.Args {
+				if arg.Type == "IDENT" {
+					val, ok := env.vars[arg.Value]
+					if ok {
+						fmt.Print(val, " ")
+					} else {
+						fmt.Printf("<%s?> ", arg.Value)
+					}
 				} else {
-					fmt.Printf("<%s?> ", arg.Value)
+					fmt.Print(arg.Value, " ")
 				}
-			} else {
-				fmt.Print(arg.Value, " ")
 			}
+			fmt.Println()
 		}
-		fmt.Println()
 	}
 }

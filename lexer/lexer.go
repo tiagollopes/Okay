@@ -89,6 +89,8 @@ func (l *Lexer) NextToken() Token {
 			return Token{Type: PORT, Literal: lit}
 		case "let":
 			return Token{Type: LET, Literal: lit}
+		case "repeat":
+			return Token{Type: REPEAT, Literal: lit}
 		case "true":
 			return Token{Type: TRUE, Literal: lit}
 		case "false":

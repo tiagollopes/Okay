@@ -4,14 +4,15 @@ Uma linguagem focada em microserviços e backend, construída em Go. A Okay tran
 
 ## 📋 Status Atual
 
-- **Lexer**: Suporte a símbolos matemáticos, comparadores, comentários (`//`), identificadores com `_` e palavras-chave booleanas (`true`/`false`).
+- **Lexer**: Suporte a símbolos matemáticos, comparadores, comentários (`//`), identificadores com `_` e palavras-chave booleanas (`true/false`).
 - **Parser**: Árvore de Sintaxe Abstrata (AST) com suporte a:
   - Variáveis e Expressões Matemáticas.
   - Estruturas `if/else` com suporte a condições diretas (booleanas) ou comparativas.
+  - Estrutura de repetição `repeat`.
 - **Eval (Interpretador)**:
-  - Gerenciamento de estados lógicos.
-  - Execução de servidores HTTP com lógica de negócio.
-  - Gerenciamento de estados e API Dinâmica (Integração total com Query Params da URL).
+  - Gerenciamento de estados lógicos e API Dinâmica (Integração total com Query Params da URL).
+  - Inicialização silenciosa de serviços.
+  - Execução de loops e condicionais em tempo de execução via requisições HTTP.
 
 ## 🛠️ Exemplo de Poder da Okay
 
@@ -58,7 +59,7 @@ service checkout port 8081 {
 
 <pre>go run cmd/okay/main.go build teste.ok</pre>
 
-**Acesse no Navegador:** O servidor estará disponível em <pre>```http://localhost:8081/?produto=Monitor_Gamer&preco=500```</pre>.
+**Acesse no Navegador:** O servidor estará disponível em <pre>```http://localhost:8081/?cupom_ativo=false&tentativas=10&produto_preco=500```</pre>.
 
 ## Estrutura do Projeto
 
@@ -71,8 +72,6 @@ service checkout port 8081 {
 **cmd/:** Ponto de entrada (CLI) da linguagem.
 
 ## Próximos Desafios
-
-[ ] Criar loops de repetição (repeat).
 
 [ ] Implementar concatenação de strings.
 
